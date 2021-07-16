@@ -82,6 +82,23 @@ which will give you the following in order of confidence:
 ]
 ```
 
+## Local development
+
+To build from source, follow these steps:
+
+1. Clone the repository
+2. Run `npm install`
+3. Run `npm run watch`
+
+To run the tests, simply run `npm test`.
+
+To build a production package:
+
+1. Run `npm run build`
+2. Run `npm pack`
+
+To publish this package, run `npm publish`.
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a

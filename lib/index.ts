@@ -5,9 +5,6 @@ export interface ModelResult {
 	confidence: number;
 }
 
-export type ModelJSON = io.ModelJSON;
-
-
 class InMemoryIOHandler implements io.IOHandler {
 
 	constructor(private readonly modelJSON: io.ModelJSON,
@@ -76,7 +73,7 @@ export class ModelOperations {
 	private _modelJson: io.ModelJSON | undefined;
 	private _weights: ArrayBuffer | undefined;
 
-	constructor(private readonly modelJSONFunc: () => Promise<io.ModelJSON>,
+	constructor(private readonly modelJSONFunc: () => Promise<any>,
 		private readonly weightsFunc: () => Promise<ArrayBuffer>) {
 	}
 
@@ -84,7 +81,7 @@ export class ModelOperations {
 		if (this._modelJson) {
 			return this._modelJson;
 		}
-		this._modelJson = await this.modelJSONFunc();
+		this._modelJson = await this.modelJSONFunc() as io.ModelJSON;
 		return this._modelJson;
 	}
 
