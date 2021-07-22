@@ -1,4 +1,6 @@
-import { GraphModel, io, loadGraphModel, Rank, setBackend, tensor, Tensor } from '@tensorflow/tfjs';
+import { Rank, tensor, Tensor, io, setBackend, env } from '@tensorflow/tfjs-core';
+import { GraphModel, loadGraphModel } from '@tensorflow/tfjs-converter';
+import '@tensorflow/tfjs-backend-cpu';
 
 export interface ModelResult {
 	languageId: string;
@@ -98,7 +100,10 @@ export class ModelOperations {
 			return;
 		}
 
-		await setBackend('cpu');
+		env().set('IS_NODE', false);
+		if(!(await setBackend('cpu'))) {
+			throw new Error('Unable to set backend to CPU.');
+		}
 
 		const resolvedModelJSON = await this.getModelJSON();
 		const resolvedWeights = await this.getWeights();
