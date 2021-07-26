@@ -119,10 +119,10 @@ export class ModelOperations {
 
 		// call out to the model
 		const predicted = await this._model!.executeAsync(tensor([content]));
-		const probabilitiesTensor: Tensor<Rank> = Array.isArray(predicted) ? predicted[0]! : predicted;
-		const languageTensor: Tensor<Rank> = Array.isArray(predicted) ? predicted[1]! : predicted;
-		const probabilities = probabilitiesTensor.dataSync() as Float32Array;
+		const languageTensor: Tensor<Rank> = Array.isArray(predicted) ? predicted[0]! : predicted;
+		const probabilitiesTensor: Tensor<Rank> = Array.isArray(predicted) ? predicted[1]! : predicted;
 		const langs: Array<string> = languageTensor.dataSync() as any;
+		const probabilities = probabilitiesTensor.dataSync() as Float32Array;
 
 		const objs: Array<ModelResult> = [];
 		for (let i = 0; i < langs.length; i++) {

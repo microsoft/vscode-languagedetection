@@ -1,7 +1,48 @@
 import { expect } from "chai";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { ModelOperations } from "../lib";
+import { ModelOperations, ModelResult } from "../lib";
+
+const expectedRelativeConfidence = 0.2;
+
+// Similar to the heuristic used in VS Code:
+function * runVSCodeHeuristic(modelResults: ModelResult[]) {
+	if (!modelResults) {
+		return;
+	}
+
+	if (modelResults[0].confidence < expectedRelativeConfidence) {
+		return;
+	}
+
+	const possibleLanguages: ModelResult[] = [modelResults[0]];
+
+	for (let current of modelResults) {
+
+		if (current === modelResults[0]) {
+			continue;
+		}
+
+		const currentHighest = possibleLanguages[possibleLanguages.length - 1];
+
+		if (currentHighest.confidence - current.confidence >= expectedRelativeConfidence) {
+			while (possibleLanguages.length) {
+				yield possibleLanguages.shift()!.languageId;
+			}
+			if (current.confidence > expectedRelativeConfidence) {
+				possibleLanguages.push(current);
+				continue;
+			}
+			return;
+		} else {
+			if (current.confidence > expectedRelativeConfidence) {
+				possibleLanguages.push(current);
+				continue;
+			}
+			return;
+		}
+	}
+}
 
 describe('describe', () => {
 	const modulOperations = new ModelOperations(async () => {
@@ -12,26 +53,29 @@ describe('describe', () => {
 	
 	it('test TypeScript', async () => {
 		const result = await modulOperations.runModel(`
-function makeThing(): Thing {
-	let size = 0;
-	return {
-		get size(): number {
-		return size;
-		},
-		set size(value: string | number | boolean) {
-		let num = Number(value);
-		// Don't allow NaN and stuff.
-		if (!Number.isFinite(num)) {
-			size = 0;
-			return;
-		}
-		size = num;
-		},
-	};
+type User = {
+	name: string;
+	age: number;
+};
+
+function isAdult(user: User): boolean {
+	return user.age >= 18;
 }
+
+const justine: User = {
+	name: 'Justine',
+	age: 'Secret!',
+};
+
+const isJustineAnAdult: string = isAdult(justine, "I shouldn't be here!");
 `);
+
 		expect(result[0].languageId).to.equal('ts');
-		expect(result[0].confidence).to.greaterThan(.4);
+		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
+
+		for await (const lang of runVSCodeHeuristic(result)) {
+			expect(lang).to.equal('ts');
+		}
 	});
 
 	it('test Python', async () => {
@@ -47,6 +91,9 @@ function makeThing(): Thing {
 			print("{0} is Odd".format(num))
 `);
 		expect(result[0].languageId).to.equal('py');
-		expect(result[0].confidence).to.greaterThan(.4);
+		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
+		for await (const lang of runVSCodeHeuristic(result)) {
+			expect(lang).to.equal('py');
+		}
 	});
 });
