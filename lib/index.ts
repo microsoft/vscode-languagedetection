@@ -70,20 +70,69 @@ class InMemoryIOHandler implements io.IOHandler {
 	}
 }
 
+export interface ModelOperationsOptions {
+	minContentSize?: number;
+	maxContentSize?: number;
+}
+
 export class ModelOperations {
+	private static DEFAULT_MAX_CONTENT_SIZE = 100000;
+	private static DEFAULT_MIN_CONTENT_SIZE = 20;
+
+	private static NODE_MODEL_JSON_FUNC: () => Promise<any> = async () => {
+		const fs = await import('fs');
+		const path = await import('path');
+
+		return new Promise<any>((resolve, reject) => {
+			fs.readFile(path.join(__dirname, '..', '..', 'model', 'model.json'), (err, data) => {
+				if(err) {
+					reject(err);
+					return;
+				}
+				resolve(JSON.parse(data.toString()));
+			});
+		});
+	}
+
+	private static NODE_WEIGHTS_FUNC: () => Promise<ArrayBuffer> = async () => {
+		const fs = await import('fs');
+		const path = await import('path');
+
+		return new Promise<ArrayBuffer>((resolve, reject) => {
+			fs.readFile(path.join(__dirname, '..', '..', 'model', 'group1-shard1of1.bin'), (err, data) => {
+				if(err) {
+					reject(err);
+					return;
+				}
+				resolve(data.buffer);
+			});
+		});
+	}
+
 	private _model: GraphModel | undefined;
 	private _modelJson: io.ModelJSON | undefined;
 	private _weights: ArrayBuffer | undefined;
+	private readonly _minContentSize: number;
+	private readonly _maxContentSize: number;
+	private readonly _modelJSONFunc: () => Promise<any>;
+	private readonly _weightsFunc: () => Promise<ArrayBuffer>;
 
-	constructor(private readonly modelJSONFunc: () => Promise<any>,
-		private readonly weightsFunc: () => Promise<ArrayBuffer>) {
+	constructor(
+		modelJSONFunc?: () => Promise<any>,
+		weightsFunc?: () => Promise<ArrayBuffer>,
+		modelOptions?: ModelOperationsOptions
+	) {
+			this._modelJSONFunc = modelJSONFunc ?? ModelOperations.NODE_MODEL_JSON_FUNC;
+			this._weightsFunc = weightsFunc ?? ModelOperations.NODE_WEIGHTS_FUNC;
+			this._minContentSize = modelOptions?.minContentSize ?? ModelOperations.DEFAULT_MIN_CONTENT_SIZE;
+			this._maxContentSize = modelOptions?.maxContentSize ?? ModelOperations.DEFAULT_MAX_CONTENT_SIZE;
 	}
 
 	private async getModelJSON() {
 		if (this._modelJson) {
 			return this._modelJson;
 		}
-		this._modelJson = await this.modelJSONFunc() as io.ModelJSON;
+		this._modelJson = await this._modelJSONFunc() as io.ModelJSON;
 		return this._modelJson;
 	}
 
@@ -91,7 +140,7 @@ export class ModelOperations {
 		if (this._weights) {
 			return this._weights;
 		}
-		this._weights = await this.weightsFunc();
+		this._weights = await this._weightsFunc();
 		return this._weights;
 	}
 
@@ -111,18 +160,24 @@ export class ModelOperations {
 	}
 
 	public async runModel(content: string): Promise<Array<ModelResult>> {
-		if (!content) {
+		if (!content || content.length < this._minContentSize) {
 			return [];
 		}
 
 		await this.loadModel();
 
+		// larger files cause a "RangeError: Maximum call stack size exceeded" in tfjs.
+		// So grab the first X characters as that should be good enough for guessing.
+		if (content.length >= this._maxContentSize) {
+			content = content.substring(0, this._maxContentSize);
+		}
+
 		// call out to the model
 		const predicted = await this._model!.executeAsync(tensor([content]));
-		const probabilitiesTensor: Tensor<Rank> = Array.isArray(predicted) ? predicted[0]! : predicted;
-		const languageTensor: Tensor<Rank> = Array.isArray(predicted) ? predicted[1]! : predicted;
-		const probabilities = probabilitiesTensor.dataSync() as Float32Array;
+		const languageTensor: Tensor<Rank> = Array.isArray(predicted) ? predicted[0]! : predicted;
+		const probabilitiesTensor: Tensor<Rank> = Array.isArray(predicted) ? predicted[1]! : predicted;
 		const langs: Array<string> = languageTensor.dataSync() as any;
+		const probabilities = probabilitiesTensor.dataSync() as Float32Array;
 
 		const objs: Array<ModelResult> = [];
 		for (let i = 0; i < langs.length; i++) {

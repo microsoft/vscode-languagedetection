@@ -2,7 +2,7 @@
 
 An npm package that uses machine learning to detect source code languages. Powered by [@yoeo](https://github.com/yoeo)'s [guesslang](https://github.com/yoeo/guesslang) model!
 
-Usage:
+## Usage
 
 First install it in your project:
 
@@ -17,13 +17,9 @@ Then instantiate a ModuleOperations and pass it in the `model.json` and `weights
 > NOTE: This is only for VS Code. In the future, you shouldn't have to do this.
 
 ```ts
-import { ModelJSON, ModelOperations } from "@vscode/vscode-languagedetection";
+import { ModelOperations } from "@vscode/vscode-languagedetection";
 
-const modulOperations = new ModelOperations(async () => {
-    return JSON.parse(readFileSync(join(__dirname, '..', '..', 'model', 'model.json')).toString()) as ModelJSON;
-}, async () => {
-    return readFileSync(join(__dirname, '..', '..', 'model', 'group1-shard1of1.bin')).buffer;
-});
+const modulOperations = new ModelOperations();
 
 const result = await modulOperations.runModel(`
 function makeThing(): Thing {
@@ -81,6 +77,24 @@ which will give you the following in order of confidence:
   { languageId: 'rb', confidence: 0.0006357143283821642 }
 ]
 ```
+
+### Advanced options
+
+By default, this library will work in Node.js. It uses the `fs` and `path` modules provided by Node.js to read in the `model.json` file and the weights file, `group1-shard1of1.bin`, that are contained in this repo.
+
+You can overwrite that behavior using the first two optional parameters of `ModelOperations`:
+
+```ts
+modelJSONFunc?: () => Promise<any> // This must return a JSON.parse() object
+weightsFunc?: () => Promise<ArrayBuffer>
+```
+
+These allow you to overwrite the model loading behavior of this package if you happen to be in a non-traditional environment. For an example of this, check out how [VS Code is doing it](https://github.com/microsoft/vscode/blob/3a1cf8e51e3797a2d9ccb12d207378de364596c4/src/vs/workbench/services/languageDetection/browser/languageDetectionService.ts#L60-L80).
+
+The third parameter is the options bag that has:
+
+* `minContentSize?: number` - The minimum number of characters in a file to be considered for language detection. Defaults to `20`.
+* `maxContentSize?: number` - The maximum number of characters *that will be used* in a file to be considered for language detection. Defaults to `100000`.
 
 ## Local development
 
