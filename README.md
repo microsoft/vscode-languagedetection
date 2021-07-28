@@ -12,9 +12,7 @@ npm install --save @vscode/vscode-languagedetection
 yarn add @vscode/vscode-languagedetection
 ```
 
-Then instantiate a ModuleOperations and pass it in the `model.json` and `weights` file content:
-
-> NOTE: This is only for VS Code. In the future, you shouldn't have to do this.
+Then instantiate a ModuleOperations and run the run the model on a string of code:
 
 ```ts
 import { ModelOperations } from "@vscode/vscode-languagedetection";
