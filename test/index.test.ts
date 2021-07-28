@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { readFileSync } from "fs";
-import { join } from "path";
+import path from "path";
 import { ModelOperations, ModelResult } from "../lib";
 
 const expectedRelativeConfidence = 0.2;
@@ -45,11 +45,7 @@ function * runVSCodeHeuristic(modelResults: ModelResult[]) {
 }
 
 describe('describe', () => {
-	const modulOperations = new ModelOperations(async () => {
-		return JSON.parse(readFileSync(join(__dirname, '..', '..', 'model', 'model.json')).toString());
-	}, async () => {
-		return readFileSync(join(__dirname, '..', '..', 'model', 'group1-shard1of1.bin')).buffer;
-	});
+	const modulOperations = new ModelOperations();
 	
 	it('test TypeScript', async () => {
 		const result = await modulOperations.runModel(`
@@ -94,6 +90,76 @@ const isJustineAnAdult: string = isAdult(justine, "I shouldn't be here!");
 		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
 		for await (const lang of runVSCodeHeuristic(result)) {
 			expect(lang).to.equal('py');
+		}
+	});
+
+	it('test Java', async () => {
+		const result = await modulOperations.runModel(`
+public class Main {
+
+	public static void main(String[] args) {
+		int num = 29;
+		boolean flag = false;
+		for (int i = 2; i <= num / 2; ++i) {
+			// condition for nonprime number
+			if (num % i == 0) {
+				flag = true;
+				break;
+			}
+		}
+	
+		if (!flag)
+			System.out.println(num + " is a prime number.");
+		else
+			System.out.println(num + " is not a prime number.");
+	}
+}
+`);
+		expect(result[0].languageId).to.equal('java');
+		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
+		for await (const lang of runVSCodeHeuristic(result)) {
+			expect(lang).to.equal('java');
+		}
+	});
+
+	it('test PowerShell', async () => {
+		const result = await modulOperations.runModel(`
+$msedgedriverPath = 'C:\\Users\\Tyler\\Downloads\\edgedriver_win64\\msedgedriver.exe'
+
+$Driver = Start-SeNewEdge -BinaryPath $msedgedriverPath -StartURL https://seattle.signetic.com/home
+
+Start-Sleep -Seconds 5
+
+while($true) {
+	$element = Find-SeElement -Driver $Driver -ClassName text-demibold
+
+	if (!$element -or $element.Text -ne 'No appointments available') {
+		# notify
+		New-BurntToastNotification -Text 'Check website'
+		break
+	} else {
+		Write-Host 'no appointments available'
+	}
+
+	Enter-SeUrl https://seattle.signetic.com/home -Driver $Driver
+	Start-Sleep -Seconds 2
+}
+`);
+		expect(result[0].languageId).to.equal('ps1');
+		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
+		for await (const lang of runVSCodeHeuristic(result)) {
+			expect(lang).to.equal('ps1');
+		}
+	});
+
+	it('test large file', async () => {
+		const result = await modulOperations.runModel(readFileSync(path.resolve(__dirname, '..', '..', 'test', 'large.ts.txt')).toString());
+
+		expect(result[0].languageId).to.equal('ts');
+		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
+
+		for await (const lang of runVSCodeHeuristic(result)) {
+			expect(lang).to.equal('ts');
 		}
 	});
 });
