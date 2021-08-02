@@ -73,6 +73,7 @@ class InMemoryIOHandler implements io.IOHandler {
 export interface ModelOperationsOptions {
 	minContentSize?: number;
 	maxContentSize?: number;
+	normalizeNewline?: boolean;
 }
 
 export class ModelOperations {
@@ -116,6 +117,7 @@ export class ModelOperations {
 	private readonly _maxContentSize: number;
 	private readonly _modelJSONFunc: () => Promise<any>;
 	private readonly _weightsFunc: () => Promise<ArrayBuffer>;
+	private readonly _normalizeNewline: boolean;
 
 	constructor(
 		modelJSONFunc?: () => Promise<any>,
@@ -126,6 +128,7 @@ export class ModelOperations {
 			this._weightsFunc = weightsFunc ?? ModelOperations.NODE_WEIGHTS_FUNC;
 			this._minContentSize = modelOptions?.minContentSize ?? ModelOperations.DEFAULT_MIN_CONTENT_SIZE;
 			this._maxContentSize = modelOptions?.maxContentSize ?? ModelOperations.DEFAULT_MAX_CONTENT_SIZE;
+			this._normalizeNewline = modelOptions?.normalizeNewline ?? true;
 	}
 
 	private async getModelJSON() {
@@ -170,6 +173,10 @@ export class ModelOperations {
 		// So grab the first X characters as that should be good enough for guessing.
 		if (content.length >= this._maxContentSize) {
 			content = content.substring(0, this._maxContentSize);
+		}
+
+		if (this._normalizeNewline) {
+			content = content.replace(/\r\n/g, '\n');
 		}
 
 		// call out to the model

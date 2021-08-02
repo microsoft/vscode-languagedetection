@@ -5,6 +5,14 @@ import { ModelOperations, ModelResult } from "../lib";
 
 const expectedRelativeConfidence = 0.2;
 
+async function arrayify(generator: Generator<string, any, unknown>) {
+	const langs: string[] = [];
+	for await (const lang of generator) {
+		langs.push(lang);
+	}
+	return langs;
+}
+
 // Similar to the heuristic used in VS Code:
 function * runVSCodeHeuristic(modelResults: ModelResult[]) {
 	if (!modelResults) {
@@ -39,6 +47,15 @@ function * runVSCodeHeuristic(modelResults: ModelResult[]) {
 				possibleLanguages.push(current);
 				continue;
 			}
+
+			// Handle languages that are close enough to each other
+			if ((currentHighest.languageId === 'ts' && current.languageId === 'js')
+				|| (currentHighest.languageId === 'js' && current.languageId === 'ts')
+				|| (currentHighest.languageId === 'c' && current.languageId === 'cpp')
+				|| (currentHighest.languageId === 'cpp' && current.languageId === 'c')) {
+				continue;
+			}
+
 			return;
 		}
 	}
@@ -49,29 +66,26 @@ describe('describe', () => {
 	
 	it('test TypeScript', async () => {
 		const result = await modulOperations.runModel(`
-type User = {
-	name: string;
-	age: number;
-};
+import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
 
-function isAdult(user: User): boolean {
-	return user.age >= 18;
+async function bootstrap() {
+	const app = await NestFactory.create(AppModule);
+	app.useGlobalPipes(new ValidationPipe());
+
+	await app.listen(3000);
+	console.log(\`Application is running on: \${await app.getUrl()}\`);
 }
-
-const justine: User = {
-	name: 'Justine',
-	age: 'Secret!',
-};
-
-const isJustineAnAdult: string = isAdult(justine, "I shouldn't be here!");
+bootstrap();
 `);
 
 		expect(result[0].languageId).to.equal('ts');
 		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
 
-		for await (const lang of runVSCodeHeuristic(result)) {
-			expect(lang).to.equal('ts');
-		}
+		const langs: string[] = await arrayify(runVSCodeHeuristic(result));
+		expect(langs.length).to.equal(1);
+		expect(langs[0]).to.equal('ts');
 	});
 
 	it('test Python', async () => {
@@ -88,9 +102,9 @@ const isJustineAnAdult: string = isAdult(justine, "I shouldn't be here!");
 `);
 		expect(result[0].languageId).to.equal('py');
 		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
-		for await (const lang of runVSCodeHeuristic(result)) {
-			expect(lang).to.equal('py');
-		}
+		const langs: string[] = await arrayify(runVSCodeHeuristic(result));
+		expect(langs.length).to.equal(1);
+		expect(langs[0]).to.equal('py');
 	});
 
 	it('test Java', async () => {
@@ -117,9 +131,9 @@ public class Main {
 `);
 		expect(result[0].languageId).to.equal('java');
 		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
-		for await (const lang of runVSCodeHeuristic(result)) {
-			expect(lang).to.equal('java');
-		}
+		const langs: string[] = await arrayify(runVSCodeHeuristic(result));
+		expect(langs.length).to.equal(1);
+		expect(langs[0]).to.equal('java');
 	});
 
 	it('test PowerShell', async () => {
@@ -147,9 +161,9 @@ while($true) {
 `);
 		expect(result[0].languageId).to.equal('ps1');
 		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
-		for await (const lang of runVSCodeHeuristic(result)) {
-			expect(lang).to.equal('ps1');
-		}
+		const langs: string[] = await arrayify(runVSCodeHeuristic(result));
+		expect(langs.length).to.equal(1);
+		expect(langs[0]).to.equal('ps1');
 	});
 
 	it('test large file', async () => {
@@ -158,8 +172,50 @@ while($true) {
 		expect(result[0].languageId).to.equal('ts');
 		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
 
+		const langs: string[] = await arrayify(runVSCodeHeuristic(result));
+		expect(langs.length).to.equal(1);
+		expect(langs[0]).to.equal('ts');
+	});
+
+	it('test Visual Basic', async () => {
+		const result = await modulOperations.runModel(`
+Module Module1
+
+Sub Main()
+	Dim id As Integer
+	Dim name As String = "Suresh Dasari"
+	Dim percentage As Double = 10.23
+	Dim gender As Char = "M"c
+	Dim isVerified As Boolean
+
+	id = 10
+	isVerified = True
+	Console.WriteLine("Id:{0}", id)
+	Console.WriteLine("Name:{0}", name)
+	Console.WriteLine("Percentage:{0}", percentage)
+	Console.WriteLine("Gender:{0}", gender)
+	Console.WriteLine("Verfied:{0}", isVerified)
+	Console.ReadLine()
+End Sub
+
+End Module
+`);
+
+		expect(result[0].languageId).to.equal('vba');
+		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
+
 		for await (const lang of runVSCodeHeuristic(result)) {
-			expect(lang).to.equal('ts');
+			expect(lang).to.equal('vba');
 		}
 	});
+
+	it('test results with carriage returns', async () => {
+		const result = await modulOperations.runModel(`public class Reverse {\r\n\r\n  public static void main(String[] args) {\r\n    String sentence = "Go work";\r\n    String reversed = reverse(sentence);\r\n    System.out.println("The reversed sentence is: " + reversed);\r\n  }\r\n\r\n  public static String reverse(String sentence) {\r\n    if (sentence.isEmpty())\r\n      return sentence;\r\n\r\n    return reverse(sentence.substring(1)) + sentence.charAt(0);\r\n  }\r\n}`);
+		expect(result[0].languageId).to.equal('java');
+		expect(result[0].confidence).to.greaterThan(expectedRelativeConfidence);
+		const langs: string[] = await arrayify(runVSCodeHeuristic(result));
+		expect(langs.length).to.equal(1);
+		expect(langs[0]).to.equal('java');
+	});
+
 });
