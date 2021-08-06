@@ -71,6 +71,8 @@ class InMemoryIOHandler implements io.IOHandler {
 }
 
 export interface ModelOperationsOptions {
+	modelJsonLoaderFunc?: () => Promise<{ [key:string]: any }>;
+	weightsLoaderFunc?: () => Promise<ArrayBuffer>;
 	minContentSize?: number;
 	maxContentSize?: number;
 	normalizeNewline?: boolean;
@@ -80,7 +82,7 @@ export class ModelOperations {
 	private static DEFAULT_MAX_CONTENT_SIZE = 100000;
 	private static DEFAULT_MIN_CONTENT_SIZE = 20;
 
-	private static NODE_MODEL_JSON_FUNC: () => Promise<any> = async () => {
+	private static NODE_MODEL_JSON_FUNC: () => Promise<{ [key:string]: any }> = async () => {
 		const fs = await import('fs');
 		const path = await import('path');
 
@@ -115,27 +117,25 @@ export class ModelOperations {
 	private _weights: ArrayBuffer | undefined;
 	private readonly _minContentSize: number;
 	private readonly _maxContentSize: number;
-	private readonly _modelJSONFunc: () => Promise<any>;
-	private readonly _weightsFunc: () => Promise<ArrayBuffer>;
+	private readonly _modelJsonLoaderFunc: () => Promise<{ [key:string]: any }>;
+	private readonly _weightsLoaderFunc: () => Promise<ArrayBuffer>;
 	private readonly _normalizeNewline: boolean;
 
-	constructor(
-		modelJSONFunc?: () => Promise<any>,
-		weightsFunc?: () => Promise<ArrayBuffer>,
-		modelOptions?: ModelOperationsOptions
-	) {
-			this._modelJSONFunc = modelJSONFunc ?? ModelOperations.NODE_MODEL_JSON_FUNC;
-			this._weightsFunc = weightsFunc ?? ModelOperations.NODE_WEIGHTS_FUNC;
-			this._minContentSize = modelOptions?.minContentSize ?? ModelOperations.DEFAULT_MIN_CONTENT_SIZE;
-			this._maxContentSize = modelOptions?.maxContentSize ?? ModelOperations.DEFAULT_MAX_CONTENT_SIZE;
-			this._normalizeNewline = modelOptions?.normalizeNewline ?? true;
+	constructor(modelOptions?: ModelOperationsOptions) {
+		this._modelJsonLoaderFunc = modelOptions?.modelJsonLoaderFunc ?? ModelOperations.NODE_MODEL_JSON_FUNC;
+		this._weightsLoaderFunc = modelOptions?.weightsLoaderFunc ?? ModelOperations.NODE_WEIGHTS_FUNC;
+		this._minContentSize = modelOptions?.minContentSize ?? ModelOperations.DEFAULT_MIN_CONTENT_SIZE;
+		this._maxContentSize = modelOptions?.maxContentSize ?? ModelOperations.DEFAULT_MAX_CONTENT_SIZE;
+		this._normalizeNewline = modelOptions?.normalizeNewline ?? true;
 	}
 
-	private async getModelJSON() {
+	private async getModelJSON(): Promise<io.ModelJSON> {
 		if (this._modelJson) {
 			return this._modelJson;
 		}
-		this._modelJson = await this._modelJSONFunc() as io.ModelJSON;
+
+		// TODO: validate model.json
+		this._modelJson = await this._modelJsonLoaderFunc() as io.ModelJSON;
 		return this._modelJson;
 	}
 
@@ -143,7 +143,9 @@ export class ModelOperations {
 		if (this._weights) {
 			return this._weights;
 		}
-		this._weights = await this._weightsFunc();
+
+		// TODO: validate weights
+		this._weights = await this._weightsLoaderFunc();
 		return this._weights;
 	}
 
