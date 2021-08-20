@@ -54,9 +54,15 @@ module.exports = function (env, argv) {
 		},
 		resolve: {
 			extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+			// alias: {
+			// 	'@tensorflow/tfjs': path.resolve(__dirname, 'node_modules', '@tensorflow', 'tfjs', 'dist', 'tf.es2017.js'),
+			// },
 			alias: {
-				'@tensorflow/tfjs': path.resolve(__dirname, 'node_modules', '@tensorflow', 'tfjs', 'dist', 'tf.es2017.js'),
-			},
+				'@tensorflow/tfjs-core$': path.resolve(
+					__dirname, './custom_tfjs/custom_tfjs_core.js'),
+				'@tensorflow/tfjs-core/dist/ops/ops_for_converter': path.resolve(
+					__dirname, './custom_tfjs/custom_ops_for_converter.js'),
+			}
 		},
 		stats: {
 			preset: 'errors-warnings',

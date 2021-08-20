@@ -1,0 +1,31 @@
+{
+    "kernels": [
+        "Range",                  "Cast",
+        "Unpack",                 "ExpandDims",
+        "StridedSlice",           "Less",
+        "LogicalAnd",             "Reshape",
+        "Add",                    "StringSplit",
+        "Max",                    "Prod",
+        "Greater",                "Multiply",
+        "Maximum",                "Minimum",
+        "Bincount",               "Cumsum",
+        "Concat",                 "StringNGrams",
+        "Pack",                   "NotEqual",
+        "GatherV2",               "Slice",
+        "SparseReshape",          "GatherNd",
+        "StringToHashBucketFast", "GreaterEqual",
+        "SparseFillEmptyRows",    "SparseSegmentSum",
+        "ZerosLike",              "Tile",
+        "Identity",               "Select",
+        "SparseSegmentMean",      "_FusedMatMul",
+        "fusedMatMul__op",        "Softmax"
+    ],
+    "backends": [
+        "cpu"
+    ],
+    "models": [
+        "./model/model.json"
+    ],
+    "outputPath": "./custom_tfjs",
+    "forwardModeOnly": true
+}
