@@ -51,3 +51,4 @@ export {bincount} from '@tensorflow/tfjs-core/dist/ops/bincount';
 export {cumsum} from '@tensorflow/tfjs-core/dist/ops/cumsum';
 export {less} from '@tensorflow/tfjs-core/dist/ops/less';
 export {logicalAnd} from '@tensorflow/tfjs-core/dist/ops/logical_and';
+export {range} from '@tensorflow/tfjs-core/dist/ops/range';

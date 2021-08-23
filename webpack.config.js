@@ -12,6 +12,9 @@ module.exports = function (env, argv) {
 		mode: mode,
 		target: 'node',
 		devtool: 'source-map',
+		ignoreWarnings: [{
+			module: /tfjs-converter/
+		}],
 		output: {
 			filename: '[name].js',
 			path: path.resolve(__dirname, 'dist', 'lib'),
