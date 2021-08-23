@@ -10,7 +10,7 @@
   "types": "dist/lib/index.d.ts",
   "scripts": {
     "pretest": "npm run clean && tsc --build ./test",
-    "prepublish": "npm run build",
+    "prepublish": "npm test && npm run build",
     "prepack": "npm run build",
     "clean": "rimraf dist",
     "watch": "npm run clean && webpack --watch",
