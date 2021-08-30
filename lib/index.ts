@@ -154,7 +154,12 @@ export class ModelOperations {
 			return;
 		}
 
-		env().set('IS_NODE', false);
+		// These 2 env set's just suppress some warnings that get logged that
+		// are not applicable for this use case.
+		const tfEnv = env();
+		tfEnv.set('IS_NODE', false);
+		tfEnv.set('PROD', true);
+
 		if(!(await setBackend('cpu'))) {
 			throw new Error('Unable to set backend to CPU.');
 		}

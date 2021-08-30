@@ -1,6 +1,6 @@
 {
   "name": "@vscode/vscode-languagedetection",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "An npm package that uses guesslang's ML model to detect source code languages",
   "main": "dist/lib/index.js",
   "bin": {
@@ -28,9 +28,9 @@
   },
   "homepage": "https://github.com/microsoft/vscode-languagedetection#readme",
   "devDependencies": {
-    "@tensorflow/tfjs-backend-cpu": "^3.8.0",
-    "@tensorflow/tfjs-converter": "^3.8.0",
-    "@tensorflow/tfjs-core": "^3.8.0",
+    "@tensorflow/tfjs-backend-cpu": "^3.9.0",
+    "@tensorflow/tfjs-converter": "^3.9.0",
+    "@tensorflow/tfjs-core": "^3.9.0",
     "@types/chai": "^4.2.21",
     "@types/mocha": "8.2.3",
     "@types/node": "^16.3.1",
