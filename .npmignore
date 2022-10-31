@@ -6,3 +6,4 @@ tsconfig.json
 vscode-vscode-languagedetection-*.tgz
 webpack.config.js
 **/*.map
+build/
