@@ -35,12 +35,10 @@ extends:
         testPlatforms:
           - name: Linux
             nodeVersions:
-              - 14.x
-              - 16.x
+              - 18.x
           - name: Windows
             nodeVersions:
-              - 14.x
-              - 16.x
+              - 18.x
 
         testSteps:
           - script: npm ci
