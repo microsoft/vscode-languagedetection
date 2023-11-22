@@ -6,8 +6,9 @@
   "bin": {
     "vscode-languagedetection": "cli/index.js"
   },
-  "module": "dist/lib/index.js",
-  "types": "dist/lib/index.d.ts",
+  "module": "dist/lib/index.esm.js",
+  "browser": "dist/lib/index.web.js",
+  "types": "dist/lib/index.node.d.ts",
   "scripts": {
     "pretest": "npm run clean && tsc --build ./test",
     "prepublishOnly": "npm test && npm run compile",
