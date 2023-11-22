@@ -47,4 +47,53 @@ export default rollup.defineConfig([{
       ecma: 2015
     })
   ]
+}, {
+  input: {
+    index: './lib/index.node.ts'
+  },
+  output: [{
+    sourcemap: true,
+    format: 'esm',
+    dir: 'dist/lib',
+    entryFileNames: '[name].esm.js'
+  }],
+  plugins: [
+    nodeResolve({
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+      browser: false,
+      preferBuiltins: true
+    }),
+    typescript({
+      sourceMap: true,
+      noEmitOnError: true,
+      tsconfig: TSCONFIG
+    }),
+    commonjs(),
+    json()
+  ]
+}, {
+  cache: false,
+  input: {
+    index: './lib/index.ts'
+  },
+  output: [{
+    sourcemap: true,
+    format: 'esm',
+    dir: 'dist/lib',
+    entryFileNames: '[name].web.js'
+  }],
+  plugins: [
+    nodeResolve({
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+      browser: true,
+      preferBuiltins: true
+    }),
+    typescript({
+      sourceMap: true,
+      noEmitOnError: true,
+      tsconfig: TSCONFIG
+    }),
+    commonjs(),
+    json()
+  ]
 }])
