@@ -71,8 +71,8 @@ class InMemoryIOHandler implements io.IOHandler {
 }
 
 export interface ModelOperationsOptions {
-	modelJsonLoaderFunc?: () => Promise<{ [key:string]: any }>;
-	weightsLoaderFunc?: () => Promise<ArrayBuffer>;
+	modelJsonLoaderFunc: () => Promise<{ [key:string]: any }>;
+	weightsLoaderFunc: () => Promise<ArrayBuffer>;
 	minContentSize?: number;
 	maxContentSize?: number;
 	normalizeNewline?: boolean;
@@ -81,36 +81,6 @@ export interface ModelOperationsOptions {
 export class ModelOperations {
 	private static DEFAULT_MAX_CONTENT_SIZE = 100000;
 	private static DEFAULT_MIN_CONTENT_SIZE = 20;
-
-	private static NODE_MODEL_JSON_FUNC: () => Promise<{ [key:string]: any }> = async () => {
-		const fs = await import('fs');
-		const path = await import('path');
-
-		return new Promise<any>((resolve, reject) => {
-			fs.readFile(path.join(__dirname, '..', '..', 'model', 'model.json'), (err, data) => {
-				if(err) {
-					reject(err);
-					return;
-				}
-				resolve(JSON.parse(data.toString()));
-			});
-		});
-	}
-
-	private static NODE_WEIGHTS_FUNC: () => Promise<ArrayBuffer> = async () => {
-		const fs = await import('fs');
-		const path = await import('path');
-
-		return new Promise<ArrayBuffer>((resolve, reject) => {
-			fs.readFile(path.join(__dirname, '..', '..', 'model', 'group1-shard1of1.bin'), (err, data) => {
-				if(err) {
-					reject(err);
-					return;
-				}
-				resolve(data.buffer);
-			});
-		});
-	}
 
 	private _model: GraphModel | undefined;
 	private _modelJson: io.ModelJSON | undefined;
@@ -121,9 +91,9 @@ export class ModelOperations {
 	private readonly _weightsLoaderFunc: () => Promise<ArrayBuffer>;
 	private readonly _normalizeNewline: boolean;
 
-	constructor(modelOptions?: ModelOperationsOptions) {
-		this._modelJsonLoaderFunc = modelOptions?.modelJsonLoaderFunc ?? ModelOperations.NODE_MODEL_JSON_FUNC;
-		this._weightsLoaderFunc = modelOptions?.weightsLoaderFunc ?? ModelOperations.NODE_WEIGHTS_FUNC;
+	constructor(modelOptions: ModelOperationsOptions) {
+		this._modelJsonLoaderFunc = modelOptions?.modelJsonLoaderFunc;
+		this._weightsLoaderFunc = modelOptions?.weightsLoaderFunc;
 		this._minContentSize = modelOptions?.minContentSize ?? ModelOperations.DEFAULT_MIN_CONTENT_SIZE;
 		this._maxContentSize = modelOptions?.maxContentSize ?? ModelOperations.DEFAULT_MAX_CONTENT_SIZE;
 		this._normalizeNewline = modelOptions?.normalizeNewline ?? true;
