@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { readFileSync } from "fs";
 import path from "path";
-import { ModelOperations, ModelResult } from "../lib";
+import { ModelOperations, ModelResult } from "../lib/index.node.js";
 
 const expectedRelativeConfidence = 0.2;
 
