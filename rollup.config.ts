@@ -14,7 +14,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 
 export default rollup.defineConfig([{
   input: {
-    index: './lib/index.ts'
+    index: './lib/index.node.ts'
   },
   output: [{
     sourcemap: true,
