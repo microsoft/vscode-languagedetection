@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import terser from '@rollup/plugin-terser'
+import replace from '@rollup/plugin-replace'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const TSCONFIG = path.resolve(__dirname, 'tsconfig.esm.json')
@@ -94,6 +95,10 @@ export default rollup.defineConfig([{
       tsconfig: TSCONFIG
     }),
     commonjs(),
-    json()
+    json(),
+    replace({
+      preventAssignment: true,
+      'env().global.fetch != null': true // to remove the use of node-fetch in the browser
+    })
   ]
 }])
