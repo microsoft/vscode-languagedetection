@@ -1,6 +1,5 @@
 import { Rank, tensor, Tensor, io, setBackend, env } from '@tensorflow/tfjs-core';
 import { GraphModel, loadGraphModel } from '@tensorflow/tfjs-converter';
-import '@tensorflow/tfjs-backend-cpu';
 
 export interface ModelResult {
 	languageId: string;
@@ -160,6 +159,7 @@ export class ModelOperations {
 		tfEnv.set('IS_NODE', false);
 		tfEnv.set('PROD', true);
 
+		await import('@tensorflow/tfjs-backend-cpu');
 		if(!(await setBackend('cpu'))) {
 			throw new Error('Unable to set backend to CPU.');
 		}
