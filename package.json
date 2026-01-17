@@ -33,7 +33,7 @@
     "@tensorflow/tfjs-core": "^3.21.0",
     "@types/chai": "^4.3.10",
     "@types/mocha": "^10.0.4",
-    "@types/node": "^16.3.1",
+    "@types/node": "^25.0.8",
     "chai": "^4.3.4",
     "esbuild": "^0.25.0",
     "mocha": "^10.2.0",
@@ -41,7 +41,7 @@
     "rimraf": "^3.0.2",
     "terser-webpack-plugin": "^5.3.9",
     "ts-loader": "^9.5.0",
-    "typescript": "^5.2.2",
+    "typescript": "^5.9.3",
     "webpack": "^5.44.0",
     "webpack-cli": "^4.7.2"
   }

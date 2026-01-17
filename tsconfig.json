@@ -1,7 +1,6 @@
 {
 	"compilerOptions": {
-        "module": "CommonJS",
-		"moduleResolution": "node",
+        "module": "nodenext",
 		"noEmitOnError": false,
 		"strict": true,
 		"esModuleInterop": true,
