@@ -1,6 +1,6 @@
 {
   "name": "@vscode/vscode-languagedetection",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "An npm package that uses guesslang's ML model to detect source code languages",
   "main": "dist/lib/index.js",
   "bin": {
