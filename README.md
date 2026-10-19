@@ -80,7 +80,7 @@ which will give you the following in order of confidence:
 
 By default, this library will work in Node.js. It uses the `fs` and `path` modules provided by Node.js to read in the `model.json` file and the weights file, `group1-shard1of1.bin`, that are contained in this repo.
 
-You can overwrite that behavior using the first two optional parameters of `ModelOperations`:
+You can overwrite that behavior using the optional options bag of `ModelOperations`:
 
 ```ts
 modelJSONFunc?: () => Promise<any> // This must return a JSON.parse() object
@@ -89,10 +89,74 @@ weightsFunc?: () => Promise<ArrayBuffer>
 
 These allow you to overwrite the model loading behavior of this package if you happen to be in a non-traditional environment. For an example of this, check out how [VS Code is doing it](https://github.com/microsoft/vscode/blob/3a1cf8e51e3797a2d9ccb12d207378de364596c4/src/vs/workbench/services/languageDetection/browser/languageDetectionService.ts#L60-L80).
 
-The third parameter is the options bag that has:
+Other options:
 
 * `minContentSize?: number` - The minimum number of characters in a file to be considered for language detection. Defaults to `20`.
 * `maxContentSize?: number` - The maximum number of characters *that will be used* in a file to be considered for language detection. Defaults to `100000`.
+
+<details>
+<summary>
+Example of use in the browser
+</summary>
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@vscode/vscode-languagedetection@1.0.21/dist/lib/index.min.js"></script>
+
+<script type="module">
+  const { ModelOperations } = window["vscode-languagedetection"];
+
+  const modulOperations = new ModelOperations({
+    modelJsonLoaderFunc: async () => {
+      const response = await fetch(
+        "https://cdn.jsdelivr.net/npm/@vscode/vscode-languagedetection@1.0.21/model/model.json"
+      );
+
+      try {
+        const modelJSON = await response.json();
+        return modelJSON;
+      } catch (e) {
+        const message = `Failed to parse model JSON.`;
+        throw new Error(message);
+      }
+    },
+    weightsLoaderFunc: async () => {
+      const response = await fetch(
+        "https://cdn.jsdelivr.net/npm/@vscode/vscode-languagedetection@1.0.21/model/group1-shard1of1.bin"
+      );
+      const buffer = await response.arrayBuffer();
+      return buffer;
+    },
+  });
+
+  const result = await modulOperations.runModel(`
+  function makeThing(): Thing {
+      let size = 0;
+      return {
+          get size(): number {
+          return size;
+          },
+          set size(value: string | number | boolean) {
+          let num = Number(value);
+          // Don't allow NaN and stuff.
+          if (!Number.isFinite(num)) {
+              size = 0;
+              return;
+          }
+          size = num;
+          },
+      };
+  }
+  `);
+
+  console.log(result);
+  document.body.insertAdjacentHTML(
+    "afterbegin",
+    `<pre>${JSON.stringify(result, null, 2)}</pre>`
+  );
+</script>
+```
+
+</details>
 
 ## Local development
 
